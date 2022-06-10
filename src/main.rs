@@ -1,6 +1,6 @@
 // TODO quote handling
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 
 #[derive(Debug)]
 struct Table {
@@ -8,7 +8,6 @@ struct Table {
 }
 type Row = Vec<Cell>;
 type Cell = String;
-
 
 fn line_is_md_sep(line: &str) -> bool {
     false
@@ -46,14 +45,20 @@ impl Table {
         // (unwrap is fine, we checked b4)
         let hopefully_sep = lines.get(1).unwrap();
         if !line_is_md_sep(hopefully_sep) {
-            let error_msg = format!("Markdown seperator is missing in line 2!\nInstead: \"{}\"", hopefully_sep);
+            let error_msg = format!(
+                "Markdown seperator is missing in line 2!\nInstead: \"{}\"",
+                hopefully_sep
+            );
             log::error!("{}", error_msg);
             bail!(Err(error_msg));
         }
 
         // parse header
         // remove first and last "|" since they are a the edge
-        let header: Row = lines.get(0).unwrap()[1..].split("\n").map(|x| x.to_owned()).collect();
+        let header: Row = lines.get(0).unwrap()[1..]
+            .split("\n")
+            .map(|x| x.to_owned())
+            .collect();
 
         // parse body
 
@@ -70,4 +75,4 @@ fn main() {
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, "info"),
     );
     println!("Hello, world!");
-    }
+}
