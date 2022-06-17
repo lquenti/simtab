@@ -23,7 +23,10 @@ fn md_enough_lines(lines: &[&str]) -> Result<()> {
 }
 
 fn md_all_lines_contain_same_amount_of_columns(lines: &[&str]) -> Result<()> {
-    let counts = lines.iter().map(|x| x.matches('|').count()).collect::<Vec<usize>>();
+    let counts = lines
+        .iter()
+        .map(|x| x.matches('|').count())
+        .collect::<Vec<usize>>();
     let res = counts[1..].iter().all(|x| *x == counts[0]);
     // TODO make macro for this
     if !res {
@@ -54,7 +57,12 @@ fn md_lines_are_valid(lines: &[&str]) -> Result<()> {
 }
 
 fn md_line_to_row(line: &str) -> Row {
-    todo!()
+    let cells = line.split('|').collect::<Vec<&str>>();
+    // first and last are seps
+    cells[1..cells.len() - 1]
+        .iter()
+        .map(|x| (*x).to_owned())
+        .collect::<Vec<String>>()
 }
 
 impl Table {
@@ -77,24 +85,18 @@ impl Table {
     }
 
     #[allow(dead_code)]
-    pub fn from_md_table(md_table_str: &str) -> Result<String> {
-        let lines: Vec<&str> = md_table_str.split('\n')
+    pub fn from_md_table(md_table_str: &str) -> Result<Self> {
+        let lines: Vec<&str> = md_table_str
+            .split('\n')
             .map(|x| x.trim())
             .filter(|x| x != &"") // filter out empty lines
             .collect();
 
         md_lines_are_valid(&lines)?;
 
-        // parse header
-        // remove first and last "|" since they are a the edge
-        let _header: Row = lines.get(0).unwrap()[1..]
-            .split('\n')
-            .map(|x| x.to_owned())
-            .collect();
-
-        // parse body
-
-        todo!()
+        let mut xss = vec![md_line_to_row(lines[0])];
+        xss.extend(lines[2..].iter().map(|x| md_line_to_row(*x)));
+        Ok(Table { xss })
     }
 
     #[allow(dead_code)]
