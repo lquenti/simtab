@@ -26,7 +26,7 @@ impl Table {
         }
     }
     #[allow(dead_code)]
-    pub fn into_csv(self) -> String {
+    pub fn to_csv(&self) -> String {
         self.xss
             .iter()
             .map(|line| line.join(","))
@@ -72,7 +72,7 @@ impl Table {
 
     // TODO can we use to and ref?
     #[allow(dead_code)]
-    pub fn into_md_table(self) -> String {
+    pub fn to_md_table(&self) -> String {
         todo!()
     }
 }
