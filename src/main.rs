@@ -10,8 +10,50 @@ struct Table {
 type Row = Vec<Cell>;
 type Cell = String;
 
-#[allow(dead_code)]
-fn line_is_md_sep(_line: &str) -> bool {
+// TODO make module for this
+fn md_enough_lines(lines: &[&str]) -> Result<()> {
+    // check if at least 2 lines (header and seperator)
+    // TODO make macro for this
+    if lines.len() < 2 {
+        let error_msg = "Markdown table too small to be valid!";
+        log::error!("{}", error_msg);
+        bail!(error_msg);
+    }
+    Ok(())
+}
+
+fn md_all_lines_contain_same_amount_of_columns(lines: &[&str]) -> Result<()> {
+    let counts = lines.iter().map(|x| x.matches('|').count()).collect::<Vec<usize>>();
+    let res = counts[1..].iter().all(|x| *x == counts[0]);
+    // TODO make macro for this
+    if !res {
+        let error_msg = "Markdown tables don't contain same amount of cells!";
+        log::error!("{}", error_msg);
+        bail!(error_msg);
+    }
+    Ok(())
+}
+
+fn md_has_valid_header(line: &str) -> Result<()> {
+    let valid_chars: [char; 2] = ['|', '-'];
+    let res = line.chars().all(|x| valid_chars.contains(&x));
+    // TODO make macro for this
+    if !res {
+        let error_msg = "Header is not valid!";
+        log::error!("{}", error_msg);
+        bail!(error_msg);
+    }
+    Ok(())
+}
+
+fn md_lines_are_valid(lines: &[&str]) -> Result<()> {
+    md_enough_lines(lines)?;
+    md_all_lines_contain_same_amount_of_columns(lines)?;
+    md_has_valid_header(lines[1])?;
+    Ok(())
+}
+
+fn md_line_to_row(line: &str) -> Row {
     todo!()
 }
 
@@ -36,27 +78,12 @@ impl Table {
 
     #[allow(dead_code)]
     pub fn from_md_table(md_table_str: &str) -> Result<String> {
-        let lines: Vec<&str> = md_table_str.split('\n').collect();
+        let lines: Vec<&str> = md_table_str.split('\n')
+            .map(|x| x.trim())
+            .filter(|x| x != &"") // filter out empty lines
+            .collect();
 
-        // check if at least 2 lines
-        // (header and seperator)
-        if lines.len() < 2 {
-            let error_msg = "Markdown table too small to be valid!";
-            log::error!("{}", error_msg);
-            bail!(error_msg);
-        }
-
-        // Check if second line is a seperator
-        // (unwrap is fine, we checked b4)
-        let hopefully_sep = lines.get(1).unwrap();
-        if !line_is_md_sep(hopefully_sep) {
-            let error_msg = format!(
-                "Markdown seperator is missing in line 2!\nInstead: \"{}\"",
-                hopefully_sep
-            );
-            log::error!("{}", error_msg);
-            bail!(error_msg);
-        }
+        md_lines_are_valid(&lines)?;
 
         // parse header
         // remove first and last "|" since they are a the edge
@@ -70,7 +97,6 @@ impl Table {
         todo!()
     }
 
-    // TODO can we use to and ref?
     #[allow(dead_code)]
     pub fn to_md_table(&self) -> String {
         todo!()
